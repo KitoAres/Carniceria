@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Carnicería - Control de Deudas</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="icono">🥩</div>
+    <div class="logo">CARNICERÍA<span>Control de Deudas</span></div>
+    <br>
+    <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password">
+    <button onclick="doLogin()">INGRESAR</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand">🥩 CARNICERÍA<small>Control de Deudas</small></div>
+    <div class="user-info">
+      <span id="userNameLabel"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- Páginas -->
+  <div class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">📊 Panel Principal</div>
+      <div class="dash-grid" id="dash-stats"></div>
+      <div class="card">
+        <div class="card-title">🏆 Clientes que más deben</div>
+        <div id="top-deudores"></div>
+      </div>
+    </div>
+
+    <!-- ── CLIENTES ── -->
+    <div class="page" id="page-clientes">
+      <div class="page-title">👥 Clientes</div>
+      <div class="card">
+        <div class="search-row">
+          <input type="text" id="buscarCliente" placeholder="🔍 Buscar por nombre..." oninput="cargarClientes()">
+          <button class="btn btn-primary" onclick="abrirModalCliente()">+ Nuevo</button>
+        </div>
+        <div id="listaClientes"></div>
+      </div>
+    </div>
+
+    <!-- ── NUEVA VENTA ── -->
+    <div class="page" id="page-venta">
+      <div class="page-title">🛒 Registrar Venta</div>
+
+      <!-- Paso 1: elegir cliente -->
+      <div id="venta-paso1">
+        <div class="card">
+          <div class="card-title">1️⃣ Seleccionar Cliente</div>
+          <div class="search-row">
+            <input type="text" id="buscarClienteVenta" placeholder="🔍 Buscar cliente..." oninput="buscarClienteParaVenta()">
+          </div>
+          <div id="listaClientesVenta"></div>
+        </div>
+      </div>
+
+      <!-- Paso 2: productos -->
+      <div id="venta-paso2" style="display:none">
+        <div class="card">
+          <div class="card-title">👤 Cliente: <span id="venta-cliente-nombre" style="color:var(--rojo)"></span>
+            <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="cambiarCliente()">Cambiar</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">2️⃣ Seleccionar Producto y Kilos</div>
+          <div class="productos-grid" id="botonesProductos"></div>
+          <div id="form-producto-sel" style="display:none">
+            <div class="form-group">
+              <label>Kilos</label>
+              <input type="number" id="inputKilos" step="0.1" min="0.1" placeholder="Ej: 1.5" oninput="calcSubtotal()">
+            </div>
+            <div id="preview-subtotal" class="text-muted" style="margin-bottom:8px"></div>
+            <button class="btn btn-success btn-block" onclick="agregarProductoVenta()">✅ Agregar al pedido</button>
+          </div>
+        </div>
+        <div class="card" id="card-detalle-venta">
+          <div class="card-title">📋 Detalle del pedido</div>
+          <div id="detalle-venta-tabla"></div>
+          <div class="total-display" id="totalVentaDisplay" style="display:none">
+            <div class="label">Total a cobrar</div>
+            <div class="amount" id="totalVentaMonto">Bs 0.00</div>
+          </div>
+          <div class="form-group mt-8">
+            <label>Observación (opcional)</label>
+            <textarea id="ventaObservacion" placeholder="Ej: Cliente nuevo, paga el viernes..."></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" id="btnGuardarVenta" style="display:none" onclick="guardarVenta()">💾 GUARDAR DEUDA/VENTA</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DEUDAS ── -->
+    <div class="page" id="page-deudas">
+      <div class="page-title">💰 Deudas Pendientes</div>
+      <div class="card">
+        <div class="search-row">
+          <input type="text" id="buscarDeuda" placeholder="🔍 Buscar cliente..." oninput="cargarDeudas()">
+          <select id="filtroEstado" onchange="cargarDeudas()" style="padding:10px;border:2px solid var(--gris-claro);border-radius:8px;font-family:Barlow,sans-serif;outline:none;font-size:14px;background:#fff">
+            <option value="">Todos</option>
+            <option value="pendiente" selected>Pendiente</option>
+            <option value="parcial">Parcial</option>
+            <option value="pagado">Pagado</option>
+          </select>
+        </div>
+        <div id="listaDeudas"></div>
+      </div>
+    </div>
+
+    <!-- ── PRECIOS ── -->
+    <div class="page" id="page-precios">
+      <div class="page-title">💲 Precios por Kilo</div>
+      <div class="card">
+        <div class="card-title">Actualizar precios</div>
+        <div id="listaPrecios"></div>
+        <button class="btn btn-primary btn-block mt-12" onclick="guardarPrecios()">💾 GUARDAR PRECIOS</button>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+  <!-- Bottom Nav -->
+  <div class="bottomnav">
+    <button onclick="navTo('dashboard')" id="nav-dashboard" class="active">
+      <span class="nav-icon">📊</span>Panel
+    </button>
+    <button onclick="navTo('clientes')" id="nav-clientes">
+      <span class="nav-icon">👥</span>Clientes
+    </button>
+    <button onclick="navTo('venta')" id="nav-venta">
+      <span class="nav-icon">🛒</span>Venta
+    </button>
+    <button onclick="navTo('deudas')" id="nav-deudas">
+      <span class="nav-icon">💰</span>Deudas
+    </button>
+    <button onclick="navTo('precios')" id="nav-precios">
+      <span class="nav-icon">💲</span>Precios
+    </button>
+  </div>
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<!-- ══════════════ MODALES ══════════════ -->
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="modalClienteTitulo">Nuevo Cliente</span>
+      <button class="modal-close" onclick="cerrarModal('modal-cliente')">✕</button>
+    </div>
+    <input type="hidden" id="clienteEditId">
+    <div class="form-group">
+      <label>Nombre *</label>
+      <input type="text" id="clienteNombre" placeholder="Nombre completo">
+    </div>
+    <div class="form-group">
+      <label>Teléfono</label>
+      <input type="text" id="clienteTelefono" placeholder="Ej: 70012345">
+    </div>
+    <div class="form-group">
+      <label>Observación</label>
+      <textarea id="clienteObservacion" placeholder="Notas del cliente..."></textarea>
+    </div>
+    <div class="flex-row">
+      <button class="btn btn-primary" style="flex:1" onclick="guardarCliente()">💾 Guardar</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-cliente')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ver Deuda -->
+<div class="modal-overlay" id="modal-deuda">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>Detalle de Deuda</span>
+      <button class="modal-close" onclick="cerrarModal('modal-deuda')">✕</button>
+    </div>
+    <div id="modal-deuda-content"></div>
+  </div>
+</div>
+
+<!-- Modal Pago -->
+<div class="modal-overlay" id="modal-pago">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="modal-pago-titulo">Registrar Pago</span>
+      <button class="modal-close" onclick="cerrarModal('modal-pago')">✕</button>
+    </div>
+    <input type="hidden" id="pagoVentaId">
+    <div class="form-group">
+      <label>Monto a pagar (Bs)</label>
+      <input type="number" id="pagoMonto" step="0.50" min="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Observación</label>
+      <input type="text" id="pagoObservacion" placeholder="Ej: Pago en efectivo">
+    </div>
+    <div class="flex-row">
+      <button class="btn btn-success" style="flex:1" onclick="confirmarPago()">✅ Confirmar Pago</button>
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-pago')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
